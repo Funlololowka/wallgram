@@ -1,15 +1,19 @@
 import http from "node:http";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import { Server } from "socket.io";
-import { ensureSchema } from "./bootstrap/schema.js";
 import { config } from "./config.js";
 import { prisma } from "./lib/prisma.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { notFoundHandler } from "./middleware/not-found.js";
 import { initRealtime } from "./realtime/gateway.js";
 import { apiRouter } from "./routes/index.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -19,7 +23,11 @@ app.use(
     credentials: false,
   }),
 );
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  }),
+);
 app.use(express.json({ limit: "10mb" }));
 
 app.get("/health", (_req, res) => {
@@ -27,12 +35,24 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api", apiRouter);
+
+// Serve static files in production
+const isProd = process.env.NODE_ENV === "production";
+if (isProd) {
+  const webDistPath = path.resolve(__dirname, "../../web/dist");
+  app.use(express.static(webDistPath));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api") || req.path.startsWith("/socket.io")) {
+      return next();
+    }
+    res.sendFile(path.join(webDistPath, "index.html"));
+  });
+}
+
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 async function start() {
-  await ensureSchema();
-
   const server = http.createServer(app);
   const io = new Server(server, {
     cors: {
@@ -46,10 +66,6 @@ async function start() {
   server.listen(config.port, config.host, () => {
     // eslint-disable-next-line no-console
     console.log(`Wallgram server running on http://${config.host}:${config.port}`);
-    if (config.host === "0.0.0.0") {
-      // eslint-disable-next-line no-console
-      console.log(`Open from other devices: http://<YOUR-PC-IP>:${config.port}`);
-    }
   });
 
   process.on("SIGINT", async () => {

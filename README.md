@@ -2,8 +2,18 @@
 
 Wallgram is a full-stack messenger platform inspired by Telegram architecture, built as a monorepo:
 
-- `apps/server`: REST API + realtime gateway (Socket.IO) + Prisma (SQLite)
+- `apps/server`: REST API + realtime gateway (Socket.IO) + Prisma (PostgreSQL)
 - `apps/web`: Vite + React client
+
+## Deployment (Railway)
+
+This project is configured for deployment on [Railway](https://railway.app/).
+
+1. Create a new PostgreSQL database on Railway.
+2. Add a new service from your repository.
+3. Set the `DATABASE_URL` environment variable from the Postgres service.
+4. Set other environment variables: `JWT_SECRET`, `NODE_ENV=production`.
+5. Railway will automatically build and start the project.
 
 ## Implemented now
 

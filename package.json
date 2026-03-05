@@ -2,6 +2,9 @@
   "name": "wallgram",
   "private": true,
   "version": "0.1.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -10,7 +13,8 @@
     "dev": "concurrently \"npm run dev --workspace @wallgram/server\" \"npm run dev --workspace @wallgram/web\"",
     "dev:server": "npm run dev --workspace @wallgram/server",
     "dev:web": "npm run dev --workspace @wallgram/web",
-    "build": "npm run build --workspace @wallgram/server && npm run build --workspace @wallgram/web"
+    "build": "npm run build --workspace @wallgram/server && npm run build --workspace @wallgram/web",
+    "start": "npm run start --workspace @wallgram/server"
   },
   "devDependencies": {
     "concurrently": "^9.0.1"
