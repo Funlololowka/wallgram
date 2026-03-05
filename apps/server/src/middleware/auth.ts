@@ -8,30 +8,31 @@ function tokenFromAuthHeader(header: string | undefined): string | null {
     return null;
   }
 
-  const [prefix, token] = header.split(" ");
-  if (prefix !== "Bearer" || !token) {
+  const parts = header.split(" ");
+  if (parts.length !== 2 || parts[0] !== "Bearer") {
     return null;
   }
 
-  return token;
+  return parts[1];
 }
 
 export async function authRequired(req: Request, _res: Response, next: NextFunction) {
-  try {
-    const token = tokenFromAuthHeader(req.headers.authorization);
-    if (!token) {
-      unauthorized();
-    }
+  const token = tokenFromAuthHeader(req.headers.authorization);
+  if (!token) {
+    return unauthorized("No token provided");
+  }
 
+  try {
     const payload = verifyToken(token);
     const user = await prisma.user.findUnique({ where: { id: payload.sub }, select: { id: true } });
     if (!user) {
-      unauthorized();
+      return unauthorized("User not found");
     }
 
     req.user = { id: user.id };
     next();
-  } catch {
-    unauthorized();
+  } catch (error) {
+    console.error("[Auth] Token verification failed:", error instanceof Error ? error.message : error);
+    unauthorized("Invalid or expired token");
   }
 }

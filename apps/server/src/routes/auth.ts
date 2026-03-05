@@ -49,26 +49,31 @@ router.post(
       badRequest("Phone or username already used");
     }
 
-    const passwordHash = await bcrypt.hash(body.password, 10);
-    const user = await prisma.user.create({
-      data: {
-        phone: body.phone,
-        username: body.username,
-        displayName: body.displayName,
-        passwordHash,
-      },
-      select: {
-        id: true,
-        phone: true,
-        username: true,
-        displayName: true,
-        avatarUrl: true,
-        bio: true,
-      },
-    });
+    try {
+      const passwordHash = await bcrypt.hash(body.password, 10);
+      const user = await prisma.user.create({
+        data: {
+          phone: body.phone,
+          username: body.username,
+          displayName: body.displayName,
+          passwordHash,
+        },
+        select: {
+          id: true,
+          phone: true,
+          username: true,
+          displayName: true,
+          avatarUrl: true,
+          bio: true,
+        },
+      });
 
-    const token = signToken(user.id);
-    res.status(201).json({ token, user });
+      const token = signToken(user.id);
+      res.status(201).json({ token, user });
+    } catch (error) {
+      console.error("[Auth] Registration failed:", error);
+      throw error;
+    }
   }),
 );
 
@@ -82,23 +87,28 @@ router.post(
       unauthorized("Invalid credentials");
     }
 
-    const ok = await bcrypt.compare(body.password, user.passwordHash);
-    if (!ok) {
-      unauthorized("Invalid credentials");
-    }
+    try {
+      const ok = await bcrypt.compare(body.password, user.passwordHash);
+      if (!ok) {
+        unauthorized("Invalid credentials");
+      }
 
-    const token = signToken(user.id);
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        phone: user.phone,
-        username: user.username,
-        displayName: user.displayName,
-        avatarUrl: user.avatarUrl,
-        bio: user.bio,
-      },
-    });
+      const token = signToken(user.id);
+      res.json({
+        token,
+        user: {
+          id: user.id,
+          phone: user.phone,
+          username: user.username,
+          displayName: user.displayName,
+          avatarUrl: user.avatarUrl,
+          bio: user.bio,
+        },
+      });
+    } catch (error) {
+      console.error("[Auth] Login failed:", error);
+      throw error;
+    }
   }),
 );
 
