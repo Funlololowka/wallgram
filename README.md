@@ -12,6 +12,7 @@ This project is configured for deployment on [Railway](https://railway.app/).
 1. Create a new PostgreSQL database on Railway.
 2. Add a new service from your repository.
 3. Set the `DATABASE_URL` environment variable from the Postgres service.
+   - **IMPORTANT**: Ensure it's NOT `localhost`. Use the URL provided by your Railway Postgres service.
 4. Set other environment variables: `JWT_SECRET`, `NODE_ENV=production`.
 5. Railway will automatically build and start the project.
 
